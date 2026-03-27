@@ -1,4 +1,4 @@
-import { Event, GalleryItem, Testimonial, TeamMember } from "./types";
+import { Event, GalleryItem, Testimonial, TeamMember } from "../types";
 
 export const events: Event[] = [
   {
