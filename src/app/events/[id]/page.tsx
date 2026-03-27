@@ -61,14 +61,14 @@ export default function EventDetailPage({
     setIsRegistered(true);
   };
 
-  const categoryColors = {
+  const categoryColors: Record<string, string> = {
     jam: "bg-green-500",
     "open-mic": "bg-purple-500",
     concert: "bg-primary-500",
     workshop: "bg-blue-500",
   };
 
-  const categoryLabels = {
+  const categoryLabels: Record<string, string> = {
     jam: "Jam Session",
     "open-mic": "Open Mic",
     concert: "Concert",
