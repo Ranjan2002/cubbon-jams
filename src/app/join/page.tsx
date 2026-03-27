@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Users, Music, Check, Guitar, Mic2, Drum, Piano } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Input, Textarea, Select } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
 
 const instruments = [
   { value: "", label: "Select your instrument" },

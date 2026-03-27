@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ToastProvider } from "@/components/ui/Toast";
 
 const inter = Inter({ 
   subsets: ["latin"], 
@@ -77,11 +78,13 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased">
         <ThemeProvider>
-          <div className="flex min-h-screen flex-col bg-white dark:bg-secondary-900 transition-colors duration-300">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          <ToastProvider>
+            <div className="flex min-h-screen flex-col bg-white dark:bg-secondary-900 transition-colors duration-300">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

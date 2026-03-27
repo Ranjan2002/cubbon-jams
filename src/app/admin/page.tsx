@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
@@ -16,9 +16,15 @@ import {
   Music,
   TrendingUp,
   LayoutDashboard,
+  Lock,
+  LogOut,
+  User,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Input, Textarea, Select } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
 import { events as initialEvents, galleryItems as initialGallery } from "@/lib/data/mockData";
 import { Event, GalleryItem } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -39,7 +45,183 @@ const galleryCategories = [
   { value: "workshop", label: "Workshop" },
 ];
 
+// Admin credentials - in production use environment variables
+const ADMIN_CREDENTIALS = {
+  username: "Ranjan",
+  password: "Ranjan@123",
+};
+
+// Login Component
+function LoginForm({ onLogin }: { onLogin: () => void }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    // Simulate network delay for better UX
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    if (
+      username === ADMIN_CREDENTIALS.username &&
+      password === ADMIN_CREDENTIALS.password
+    ) {
+      // Store auth in localStorage with expiry
+      const authData = {
+        isAuthenticated: true,
+        username: username,
+        expiry: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+      };
+      localStorage.setItem("admin_auth", JSON.stringify(authData));
+      onLogin();
+    } else {
+      setError("Invalid username or password");
+    }
+
+    setIsLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary-900 via-secondary-800 to-primary-900 p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        {/* Logo/Brand */}
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="w-20 h-20 bg-primary-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg shadow-primary-500/30"
+          >
+            <Music className="w-10 h-10 text-white" />
+          </motion.div>
+          <h1 className="text-3xl font-bold text-white mb-2">Admin Login</h1>
+          <p className="text-secondary-400">Cubbon Jams Dashboard</p>
+        </div>
+
+        {/* Login Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white dark:bg-secondary-800 rounded-2xl p-8 shadow-2xl"
+        >
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Error Message */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex items-center gap-2 p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-sm"
+                >
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Username Field */}
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary-400" />
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-secondary-50 dark:bg-secondary-700 border border-secondary-200 dark:border-secondary-600 rounded-xl text-secondary-900 dark:text-white placeholder-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  placeholder="Enter username"
+                  required
+                  autoComplete="username"
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary-400" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-secondary-50 dark:bg-secondary-700 border border-secondary-200 dark:border-secondary-600 rounded-xl text-secondary-900 dark:text-white placeholder-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  placeholder="Enter password"
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <motion.button
+              type="submit"
+              disabled={isLoading}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-400 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/30 transition-colors flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <Lock className="w-5 h-5" />
+                  Sign In
+                </>
+              )}
+            </motion.button>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-secondary-500 dark:text-secondary-400">
+              Protected admin area. Unauthorized access is prohibited.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Back to Home */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-center mt-6"
+        >
+          <a
+            href="/"
+            className="text-secondary-400 hover:text-white transition-colors text-sm"
+          >
+            ← Back to Home
+          </a>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
+  const toast = useToast();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [adminUsername, setAdminUsername] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [events, setEvents] = useState(initialEvents);
   const [gallery, setGallery] = useState(initialGallery);
@@ -67,6 +249,64 @@ export default function AdminPage() {
     date: "",
     category: "acoustic" as GalleryItem["category"],
   });
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        const authData = localStorage.getItem("admin_auth");
+        if (authData) {
+          const parsed = JSON.parse(authData);
+          if (parsed.isAuthenticated && parsed.expiry > Date.now()) {
+            setIsAuthenticated(true);
+            setAdminUsername(parsed.username);
+          } else {
+            localStorage.removeItem("admin_auth");
+          }
+        }
+      } catch {
+        localStorage.removeItem("admin_auth");
+      }
+      setIsCheckingAuth(false);
+    };
+    checkAuth();
+  }, []);
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem("admin_auth");
+    setIsAuthenticated(false);
+    setAdminUsername("");
+    toast.info("Logged Out", "You have been signed out successfully.");
+  };
+
+  // Handle successful login
+  const handleLogin = () => {
+    const authData = localStorage.getItem("admin_auth");
+    if (authData) {
+      const parsed = JSON.parse(authData);
+      setAdminUsername(parsed.username);
+    }
+    setIsAuthenticated(true);
+    toast.success("Welcome Back!", "You have signed in successfully.");
+  };
+
+  // Show loading while checking auth
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-secondary-900">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-secondary-400">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login if not authenticated
+  if (!isAuthenticated) {
+    return <LoginForm onLogin={handleLogin} />;
+  }
 
   // Stats
   const stats = [
@@ -144,6 +384,7 @@ export default function AdminPage() {
             : e
         )
       );
+      toast.success("Event Updated", `"${eventForm.title}" has been updated successfully.`);
     } else {
       const newEvent: Event = {
         id: Date.now().toString(),
@@ -152,13 +393,16 @@ export default function AdminPage() {
         registered: 0,
       };
       setEvents([newEvent, ...events]);
+      toast.success("Event Created", `"${eventForm.title}" has been added to events.`);
     }
     setIsModalOpen(false);
   };
 
   const handleDeleteEvent = (id: string) => {
+    const eventToDelete = events.find(e => e.id === id);
     if (confirm("Are you sure you want to delete this event?")) {
       setEvents(events.filter((e) => e.id !== id));
+      toast.success("Event Deleted", `"${eventToDelete?.title}" has been removed.`);
     }
   };
 
@@ -184,6 +428,7 @@ export default function AdminPage() {
             : item
         )
       );
+      toast.success("Image Updated", `"${galleryForm.title}" has been updated.`);
     } else {
       const newItem: GalleryItem = {
         id: Date.now().toString(),
@@ -191,31 +436,47 @@ export default function AdminPage() {
         ...galleryForm,
       };
       setGallery([newItem, ...gallery]);
+      toast.success("Image Added", `"${galleryForm.title}" has been added to gallery.`);
     }
     setIsModalOpen(false);
   };
 
   const handleDeleteGalleryItem = (id: string) => {
+    const itemToDelete = gallery.find(item => item.id === id);
     if (confirm("Are you sure you want to delete this image?")) {
       setGallery(gallery.filter((item) => item.id !== id));
+      toast.success("Image Deleted", `"${itemToDelete?.title}" has been removed.`);
     }
   };
 
   return (
     <div className="min-h-screen pt-20 pb-16 bg-secondary-50 dark:bg-secondary-900">
       <div className="container-custom">
-        {/* Header */}
+        {/* Header with Logout */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl sm:text-4xl font-bold text-secondary-900 dark:text-white mb-2">
-            Admin Dashboard
-          </h1>
-          <p className="text-secondary-600 dark:text-secondary-400">
-            Manage events, gallery, and community content
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-secondary-900 dark:text-white mb-2">
+                Admin Dashboard
+              </h1>
+              <p className="text-secondary-600 dark:text-secondary-400">
+                Welcome back, <span className="font-semibold text-primary-500">{adminUsername}</span>
+              </p>
+            </div>
+            <motion.button
+              onClick={handleLogout}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-secondary-200 dark:bg-secondary-700 hover:bg-red-100 dark:hover:bg-red-900/30 text-secondary-700 dark:text-secondary-300 hover:text-red-600 dark:hover:text-red-400 rounded-xl font-medium transition-all"
+            >
+              <LogOut className="w-5 h-5" />
+              Logout
+            </motion.button>
+          </div>
         </motion.div>
 
         {/* Tabs */}

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
 
 const contactInfo = [
   {
@@ -61,6 +62,7 @@ const socialLinks = [
 ];
 
 export default function ContactPage() {
+  const toast = useToast();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -72,6 +74,7 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
+    toast.success("Message Sent!", "We'll get back to you within 24 hours.");
   };
 
   const handleChange = (
