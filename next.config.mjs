@@ -12,10 +12,6 @@ const nextConfig = {
       },
     ],
   },
-  // Ensure CSS is included in the build output
-  experimental: {
-    optimizeCss: true,
-  },
 };
 
 export default nextConfig;
