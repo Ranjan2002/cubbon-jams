@@ -1,7 +1,6 @@
 [build]
   command = "npm run build"
-  publish = "."
-  # Publish directory must be "." for Next.js plugin to work
+  # DO NOT set publish directory - the Next.js plugin handles it automatically
 
 [build.environment]
   NODE_VERSION = "18"
