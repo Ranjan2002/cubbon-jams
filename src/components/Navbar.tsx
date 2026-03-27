@@ -32,7 +32,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, mounted } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -111,10 +111,14 @@ export default function Navbar() {
               className="p-2 sm:p-2.5 rounded-xl bg-secondary-100 dark:bg-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-colors"
               aria-label="Toggle theme"
             >
-              {theme === "light" ? (
-                <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
+              {mounted ? (
+                theme === "light" ? (
+                  <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
+                ) : (
+                  <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
+                )
               ) : (
-                <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </motion.button>
 
