@@ -196,7 +196,7 @@ export default function EventDetailPage({
                   Performers
                 </h2>
                 <div className="flex flex-wrap gap-3">
-                  {event.performers.map((performer, index) => (
+                  {event.performers.map((performer: string, index: number) => (
                     <span
                       key={index}
                       className="px-4 py-2 bg-secondary-100 dark:bg-secondary-700 rounded-xl text-secondary-700 dark:text-secondary-300 text-sm font-medium"
