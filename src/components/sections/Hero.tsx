@@ -5,6 +5,30 @@ import Link from "next/link";
 import { ArrowRight, Music2, Users, Calendar, Play } from "lucide-react";
 import Button from "@/components/ui/Button";
 
+// Fixed positions to avoid hydration mismatch
+const particlePositions = [
+  { left: "10%", top: "20%", delay: 0, duration: 3.5 },
+  { left: "25%", top: "45%", delay: 0.5, duration: 4 },
+  { left: "40%", top: "15%", delay: 1, duration: 3.2 },
+  { left: "55%", top: "60%", delay: 0.3, duration: 4.5 },
+  { left: "70%", top: "30%", delay: 0.8, duration: 3.8 },
+  { left: "85%", top: "50%", delay: 1.2, duration: 4.2 },
+  { left: "15%", top: "70%", delay: 0.6, duration: 3.6 },
+  { left: "35%", top: "80%", delay: 1.5, duration: 4.1 },
+  { left: "60%", top: "10%", delay: 0.2, duration: 3.3 },
+  { left: "80%", top: "75%", delay: 0.9, duration: 3.9 },
+  { left: "5%", top: "40%", delay: 1.1, duration: 4.3 },
+  { left: "50%", top: "35%", delay: 0.4, duration: 3.7 },
+  { left: "90%", top: "25%", delay: 1.4, duration: 4.4 },
+  { left: "20%", top: "55%", delay: 0.7, duration: 3.4 },
+  { left: "75%", top: "65%", delay: 1.3, duration: 4.6 },
+  { left: "30%", top: "5%", delay: 1.6, duration: 3.1 },
+  { left: "65%", top: "85%", delay: 0.1, duration: 4.7 },
+  { left: "45%", top: "25%", delay: 1.8, duration: 3.0 },
+  { left: "95%", top: "55%", delay: 0.15, duration: 4.8 },
+  { left: "8%", top: "90%", delay: 1.9, duration: 3.25 },
+];
+
 export default function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
@@ -20,22 +44,22 @@ export default function Hero() {
         <div className="absolute inset-0 bg-gradient-to-br from-secondary-900/95 via-secondary-900/80 to-primary-900/70" />
         {/* Animated Elements */}
         <div className="absolute inset-0 overflow-hidden">
-          {[...Array(20)].map((_, i) => (
+          {particlePositions.map((particle, i) => (
             <motion.div
               key={i}
               className="absolute w-2 h-2 bg-primary-500/30 rounded-full"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
+                left: particle.left,
+                top: particle.top,
               }}
               animate={{
                 y: [0, -30, 0],
                 opacity: [0.3, 0.8, 0.3],
               }}
               transition={{
-                duration: 3 + Math.random() * 2,
+                duration: particle.duration,
                 repeat: Infinity,
-                delay: Math.random() * 2,
+                delay: particle.delay,
               }}
             />
           ))}

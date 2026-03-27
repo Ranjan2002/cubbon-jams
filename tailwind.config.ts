@@ -33,11 +33,12 @@ const config: Config = {
           700: "#303030",
           800: "#212121",
           900: "#111111",
+          950: "#0a0a0a",
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        heading: ["Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+        heading: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
       },
       borderRadius: {
         "4xl": "2rem",

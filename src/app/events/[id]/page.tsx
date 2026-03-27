@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   Calendar,
   Clock,
@@ -23,12 +23,9 @@ import CountdownTimer from "@/components/ui/CountdownTimer";
 import { events } from "@/lib/data/mockData";
 import { formatDate, formatTime } from "@/lib/utils";
 
-export default function EventDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
+export default function EventDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
   const router = useRouter();
   const [isRegistered, setIsRegistered] = useState(false);
   const [formData, setFormData] = useState({
@@ -224,7 +221,7 @@ export default function EventDetailPage({
               </p>
               <div className="aspect-video rounded-xl overflow-hidden bg-secondary-100 dark:bg-secondary-700">
                 <iframe
-                  src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(
+                  src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY_HERE'}&q=${encodeURIComponent(
                     event.address
                   )}`}
                   width="100%"

@@ -120,16 +120,16 @@ cubbon-jams/
 
 ### Environment Variables
 
-Create a `.env.local` file for environment variables:
+Create a `.env.local` file (copy from `.env.local.example`):
 
 ```env
-# Database (if using Supabase)
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-key
+# Google Maps API Key (Required for event location maps)
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 
-# Google Maps API (optional)
-NEXT_PUBLIC_GOOGLE_MAPS_KEY=your-google-maps-key
+# Get your key from: https://console.cloud.google.com/google/maps-apis
 ```
+
+**Important:** Never commit your `.env.local` file to git. It's already in `.gitignore`.
 
 ### Tailwind
 
@@ -137,11 +137,27 @@ Custom colors and animations are configured in `tailwind.config.ts`.
 
 ## 🚢 Deployment
 
-### Vercel (Recommended)
+### Netlify (Configured)
+
+The project is configured for Netlify deployment with `netlify.toml`.
+
+**Quick Deploy:**
+```bash
+git push origin main
+```
+
+**Environment Variables in Netlify:**
+1. Go to Site settings → Environment variables
+2. Add: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` = `your_key`
+
+See `DEPLOYMENT.md` for detailed deployment instructions.
+
+### Vercel (Alternative)
 
 1. Push your code to GitHub
 2. Connect your repository to Vercel
-3. Deploy!
+3. Add environment variables
+4. Deploy!
 
 ### Manual Build
 
@@ -149,6 +165,13 @@ Custom colors and animations are configured in `tailwind.config.ts`.
 npm run build
 npm run start
 ```
+
+## 📚 Documentation
+
+- **DEPLOYMENT.md** - Complete deployment guide
+- **FIXES.md** - List of fixes and improvements
+- **SUMMARY.md** - Comprehensive code analysis
+- **.env.local.example** - Environment variable template
 
 ## 📄 License
 

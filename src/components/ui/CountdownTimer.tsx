@@ -13,9 +13,13 @@ export default function CountdownTimer({
   targetDate,
   label = "Event starts in",
 }: CountdownTimerProps) {
-  const [timeLeft, setTimeLeft] = useState(getTimeUntil(targetDate));
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setTimeLeft(getTimeUntil(targetDate));
+    
     const timer = setInterval(() => {
       setTimeLeft(getTimeUntil(targetDate));
     }, 1000);
@@ -35,6 +39,30 @@ export default function CountdownTimer({
     timeLeft.hours === 0 &&
     timeLeft.minutes === 0 &&
     timeLeft.seconds === 0;
+
+  if (!mounted) {
+    return (
+      <div className="text-center">
+        {label && (
+          <p className="text-sm text-secondary-500 dark:text-secondary-400 mb-4">
+            {label}
+          </p>
+        )}
+        <div className="flex justify-center gap-3 sm:gap-4">
+          {timeUnits.map((unit) => (
+            <div key={unit.label} className="flex flex-col items-center">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary-500 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/30">
+                <span className="text-2xl sm:text-3xl font-bold text-white">00</span>
+              </div>
+              <span className="text-xs sm:text-sm text-secondary-500 dark:text-secondary-400 mt-2 font-medium">
+                {unit.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (isExpired) {
     return (
