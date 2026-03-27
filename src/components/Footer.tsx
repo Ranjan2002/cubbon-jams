@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   Music,
@@ -60,8 +61,13 @@ export default function Footer() {
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
-                <Music className="w-6 h-6 text-white" />
+              <div className="relative w-12 h-12 rounded-xl overflow-hidden">
+                <Image
+                  src="/images/logo/CARBON JAMS no bg.png"
+                  alt="Cubbon Jams Logo"
+                  fill
+                  className="object-contain"
+                />
               </div>
               <div>
                 <h2 className="text-xl font-bold leading-none">CUBBON</h2>

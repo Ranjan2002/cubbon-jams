@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -64,8 +65,14 @@ export default function Navbar() {
               whileTap={{ scale: 0.95 }}
               className="flex items-center"
             >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30">
-                <Music className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden shadow-lg shadow-primary-500/30">
+                <Image
+                  src="/images/logo/CARBON JAMS no bg.png"
+                  alt="Cubbon Jams Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
               <div className="ml-2 sm:ml-3">
                 <h1 className="text-lg sm:text-xl font-bold text-secondary-900 dark:text-white leading-none">

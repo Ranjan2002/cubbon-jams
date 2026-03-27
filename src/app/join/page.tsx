@@ -52,6 +52,7 @@ const benefits = [
 ];
 
 export default function JoinPage() {
+  const toast = useToast();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -66,6 +67,7 @@ export default function JoinPage() {
     e.preventDefault();
     // Simulate form submission
     setIsSubmitted(true);
+    toast.success("Welcome to Cubbon Jams! 🎸", "We'll be in touch soon about upcoming jams.");
   };
 
   const handleChange = (

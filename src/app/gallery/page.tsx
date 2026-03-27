@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { Camera, X, Filter } from "lucide-react";
+import { Camera, X, ChevronLeft, ChevronRight, Download, Share2, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { galleryItems } from "@/lib/data/mockData";
+import { useToast } from "@/components/ui/Toast";
 
 const categories = [
   { value: "all", label: "All" },
@@ -15,12 +16,129 @@ const categories = [
 ];
 
 export default function GalleryPage() {
+  const toast = useToast();
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const filteredItems = galleryItems.filter(
     (item) => selectedCategory === "all" || item.category === selectedCategory
   );
+
+  const selectedImage = selectedIndex !== null ? filteredItems[selectedIndex] : null;
+
+  // Keyboard navigation
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (selectedIndex === null) return;
+
+    switch (e.key) {
+      case "ArrowLeft":
+        setSelectedIndex((prev) => 
+          prev !== null && prev > 0 ? prev - 1 : filteredItems.length - 1
+        );
+        setIsZoomed(false);
+        break;
+      case "ArrowRight":
+        setSelectedIndex((prev) => 
+          prev !== null && prev < filteredItems.length - 1 ? prev + 1 : 0
+        );
+        setIsZoomed(false);
+        break;
+      case "Escape":
+        setSelectedIndex(null);
+        setIsZoomed(false);
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        }
+        break;
+      case "z":
+      case "Z":
+        setIsZoomed((prev) => !prev);
+        break;
+    }
+  }, [selectedIndex, filteredItems.length]);
+
+  useEffect(() => {
+    if (selectedIndex !== null) {
+      document.addEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [selectedIndex, handleKeyDown]);
+
+  const handlePrevious = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIndex((prev) => 
+      prev !== null && prev > 0 ? prev - 1 : filteredItems.length - 1
+    );
+    setIsZoomed(false);
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIndex((prev) => 
+      prev !== null && prev < filteredItems.length - 1 ? prev + 1 : 0
+    );
+    setIsZoomed(false);
+  };
+
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectedImage) return;
+    
+    try {
+      const response = await fetch(selectedImage.src);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `cubbon-jams-${selectedImage.title.toLowerCase().replace(/\s+/g, "-")}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success("Download Started", "Image is being downloaded.");
+    } catch {
+      toast.error("Download Failed", "Unable to download the image.");
+    }
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectedImage) return;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: selectedImage.title,
+          text: `Check out this photo from ${selectedImage.event} at Cubbon Jams!`,
+          url: window.location.href,
+        });
+      } catch {
+        // User cancelled or share failed
+      }
+    } else {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link Copied", "Share link copied to clipboard!");
+    }
+  };
+
+  const handleFullscreen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -84,7 +202,7 @@ export default function GalleryPage() {
                 className={`relative rounded-2xl overflow-hidden cursor-pointer group ${
                   index % 5 === 0 ? "md:col-span-2 md:row-span-2" : ""
                 }`}
-                onClick={() => setSelectedImage(item.src)}
+                onClick={() => setSelectedIndex(index)}
               >
                 <div
                   className={`relative ${
