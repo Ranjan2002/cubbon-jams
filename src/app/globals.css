@@ -65,18 +65,24 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-secondary-800;
+  background: #f1f1f1;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #212121;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-primary-500 rounded-full;
+  background: #E53935;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary-600;
+  background: #C62420;
 }
 
 /* Selection */
 ::selection {
-  @apply bg-primary-500 text-white;
+  background: #E53935;
+  color: white;
 }
