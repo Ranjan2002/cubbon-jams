@@ -248,37 +248,142 @@ export default function GalleryPage() {
         )}
       </div>
 
-      {/* Lightbox */}
+      {/* Enhanced Lightbox */}
       <AnimatePresence>
         {selectedImage && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
-            onClick={() => setSelectedImage(null)}
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+            onClick={() => {
+              setSelectedIndex(null);
+              setIsZoomed(false);
+            }}
           >
-            <button
-              className="absolute top-4 right-4 text-white hover:text-primary-500 transition-colors z-10"
-              onClick={() => setSelectedImage(null)}
+            {/* Top Controls */}
+            <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between z-20 bg-gradient-to-b from-black/50 to-transparent">
+              <div className="text-white">
+                <p className="font-semibold">{selectedImage.title}</p>
+                <p className="text-sm text-white/70">{selectedImage.event}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleShare}
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  title="Share"
+                >
+                  <Share2 className="w-5 h-5" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleDownload}
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  title="Download"
+                >
+                  <Download className="w-5 h-5" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsZoomed(!isZoomed);
+                  }}
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  title="Zoom"
+                >
+                  {isZoomed ? <ZoomOut className="w-5 h-5" /> : <ZoomIn className="w-5 h-5" />}
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleFullscreen}
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  title="Fullscreen"
+                >
+                  <Maximize2 className="w-5 h-5" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedIndex(null);
+                    setIsZoomed(false);
+                  }}
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  title="Close (Esc)"
+                >
+                  <X className="w-5 h-5" />
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Previous Button */}
+            <motion.button
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handlePrevious}
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-20"
+              title="Previous (←)"
             >
-              <X className="w-8 h-8" />
-            </button>
+              <ChevronLeft className="w-6 h-6" />
+            </motion.button>
+
+            {/* Next Button */}
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleNext}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-20"
+              title="Next (→)"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </motion.button>
+
+            {/* Image Container */}
             <motion.div
+              key={selectedImage.id}
               initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              animate={{ 
+                scale: isZoomed ? 1.5 : 1, 
+                opacity: 1 
+              }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-5xl max-h-[85vh] w-full"
-              onClick={(e) => e.stopPropagation()}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className={`relative max-w-5xl max-h-[85vh] w-full px-16 ${isZoomed ? "cursor-zoom-out" : "cursor-zoom-in"}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsZoomed(!isZoomed);
+              }}
             >
               <Image
-                src={selectedImage}
-                alt="Gallery image"
+                src={selectedImage.src}
+                alt={selectedImage.title}
                 width={1200}
                 height={800}
                 className="rounded-2xl object-contain w-full h-full"
+                priority
               />
             </motion.div>
+
+            {/* Bottom Counter */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm bg-black/30 px-4 py-2 rounded-full">
+              {selectedIndex !== null ? selectedIndex + 1 : 0} / {filteredItems.length}
+            </div>
+
+            {/* Keyboard Hint */}
+            <div className="absolute bottom-4 right-4 text-white/50 text-xs hidden sm:block">
+              ← → Navigate • Z Zoom • Esc Close
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
