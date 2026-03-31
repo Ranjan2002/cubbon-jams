@@ -14,6 +14,7 @@ export interface Event {
   registered?: number;
   isPast?: boolean;
   featured?: boolean;
+  bookingUrl?: string;
 }
 
 export interface GalleryItem {

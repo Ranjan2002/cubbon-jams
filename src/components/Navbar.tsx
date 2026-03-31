@@ -25,7 +25,7 @@ const navLinks = [
   { href: "/events", label: "Events", icon: Calendar },
   { href: "/gallery", label: "Gallery", icon: ImageIcon },
   { href: "/about", label: "About", icon: Info },
-  { href: "/join", label: "Join", icon: Users },
+  { href: "https://docs.google.com/forms/d/e/1FAIpQLSeS17ZDXHgWMLrQDCjkqVrrk38vekQpKFaAzeKqK6TDjN0w8Q/viewform?fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQMMjU2MjgxMDQwNTU4AAGn5PG3QDHSbKm4LMiiKaC-mwHvFjsQq2joaJ_Wc6VHYwVAZPItWPm1bUY126Q_aem_fqNsMZZi42vq6WLEk_1JhA", label: "Join", icon: Users },
   { href: "/contact", label: "Contact", icon: Mail },
 ];
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { Camera, X, ChevronLeft, ChevronRight, Download, Share2, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
-import { galleryItems } from "@/lib/data/mockData";
+import { useEvents } from "@/lib/EventsContext";
 import { useToast } from "@/components/ui/Toast";
 
 const categories = [
@@ -17,6 +17,7 @@ const categories = [
 
 export default function GalleryPage() {
   const toast = useToast();
+  const { gallery: galleryItems, isLoading } = useEvents();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -139,6 +140,17 @@ export default function GalleryPage() {
       setIsFullscreen(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-secondary-400">Loading gallery...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-16">

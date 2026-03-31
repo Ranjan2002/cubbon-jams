@@ -15,6 +15,7 @@ import {
   Linkedin,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import FAQ from "@/components/sections/FAQ";
 import { teamMembers } from "@/lib/data/mockData";
 
 const milestones = [
@@ -346,8 +347,11 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <FAQ />
+
       {/* CTA */}
-      <section className="container-custom">
+      <section className="container-custom pb-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

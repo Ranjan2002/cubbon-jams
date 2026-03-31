@@ -20,7 +20,7 @@ const footerLinks = {
     { label: "Events", href: "/events" },
     { label: "Gallery", href: "/gallery" },
     { label: "About", href: "/about" },
-    { label: "Join Community", href: "/join" },
+    { label: "Join Community", href: "https://docs.google.com/forms/d/e/1FAIpQLSeS17ZDXHgWMLrQDCjkqVrrk38vekQpKFaAzeKqK6TDjN0w8Q/viewform?fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQMMjU2MjgxMDQwNTU4AAGn5PG3QDHSbKm4LMiiKaC-mwHvFjsQq2joaJ_Wc6VHYwVAZPItWPm1bUY126Q_aem_fqNsMZZi42vq6WLEk_1JhA" },
     { label: "Contact", href: "/contact" },
   ],
   events: [
@@ -34,7 +34,7 @@ const footerLinks = {
 const socialLinks = [
   {
     icon: Instagram,
-    href: "https://instagram.com/cubbonjams",
+    href: "https://instagram.com/cubbon_jams/",
     label: "Instagram",
     color: "hover:bg-pink-500",
   },

@@ -4,8 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Filter, Search } from "lucide-react";
 import EventCard from "@/components/ui/EventCard";
-import { Input } from "@/components/ui/Input";
-import { events } from "@/lib/data/mockData";
+import { useEvents } from "@/lib/EventsContext";
 
 const categories = [
   { value: "all", label: "All Events" },
@@ -21,6 +20,7 @@ const tabs = [
 ];
 
 export default function EventsPage() {
+  const { events, isLoading } = useEvents();
   const [activeTab, setActiveTab] = useState("upcoming");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,6 +36,17 @@ export default function EventsPage() {
       event.location.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesCategory && matchesSearch;
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-secondary-400">Loading events...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-16">

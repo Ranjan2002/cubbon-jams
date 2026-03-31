@@ -16,17 +16,23 @@ import {
   Music,
   Mic,
   Check,
+  ExternalLink,
+  Ticket,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import CountdownTimer from "@/components/ui/CountdownTimer";
-import { events } from "@/lib/data/mockData";
+import SocialShare from "@/components/ui/SocialShare";
+import { useToast } from "@/components/ui/Toast";
+import { useEvents } from "@/lib/EventsContext";
 import { formatDate, formatTime } from "@/lib/utils";
 
 export default function EventDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
+  const toast = useToast();
+  const { events, isLoading } = useEvents();
   const [isRegistered, setIsRegistered] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -36,6 +42,17 @@ export default function EventDetailPage() {
   });
 
   const event = events.find((e) => e.id === id);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-secondary-400">Loading event...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!event) {
     return (
@@ -56,6 +73,7 @@ export default function EventDetailPage() {
     e.preventDefault();
     // Simulate registration
     setIsRegistered(true);
+    toast.success("Registration Successful! 🎉", "We'll send you a confirmation email shortly.");
   };
 
   const categoryColors: Record<string, string> = {
@@ -148,11 +166,12 @@ export default function EventDetailPage() {
 
       {/* Content */}
       <div className="container-custom py-12">
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className={`grid gap-8 ${event.id === "1" ? "lg:grid-cols-1 max-w-2xl mx-auto" : "lg:grid-cols-3"}`}>
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          {event.id !== "1" && (
+            <div className="lg:col-span-2 space-y-8">
             {/* Countdown Timer */}
-            {!event.isPast && (
+            {!event.isPast && event.id !== "1" && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -166,22 +185,24 @@ export default function EventDetailPage() {
             )}
 
             {/* Description */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white dark:bg-secondary-800 rounded-2xl p-6 shadow-lg"
-            >
-              <h2 className="text-xl font-bold text-secondary-900 dark:text-white mb-4">
-                About This Event
-              </h2>
-              <p className="text-secondary-600 dark:text-secondary-400 leading-relaxed">
-                {event.description}
-              </p>
-            </motion.div>
+            {event.id !== "1" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white dark:bg-secondary-800 rounded-2xl p-6 shadow-lg"
+              >
+                <h2 className="text-xl font-bold text-secondary-900 dark:text-white mb-4">
+                  About This Event
+                </h2>
+                <p className="text-secondary-600 dark:text-secondary-400 leading-relaxed">
+                  {event.description}
+                </p>
+              </motion.div>
+            )}
 
             {/* Performers */}
-            {event.performers && event.performers.length > 0 && (
+            {event.performers && event.performers.length > 0 && event.id !== "1" && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -206,34 +227,37 @@ export default function EventDetailPage() {
             )}
 
             {/* Location */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white dark:bg-secondary-800 rounded-2xl p-6 shadow-lg"
-            >
-              <h2 className="text-xl font-bold text-secondary-900 dark:text-white mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-primary-500" />
-                Location
-              </h2>
-              <p className="text-secondary-600 dark:text-secondary-400 mb-4">
-                {event.address}
-              </p>
-              <div className="aspect-video rounded-xl overflow-hidden bg-secondary-100 dark:bg-secondary-700">
-                <iframe
-                  src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY_HERE'}&q=${encodeURIComponent(
-                    event.address
-                  )}`}
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
-            </motion.div>
-          </div>
+            {event.id !== "1" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-white dark:bg-secondary-800 rounded-2xl p-6 shadow-lg"
+              >
+                <h2 className="text-xl font-bold text-secondary-900 dark:text-white mb-4 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-primary-500" />
+                  Location
+                </h2>
+                <p className="text-secondary-600 dark:text-secondary-400 mb-4">
+                  {event.address}
+                </p>
+                <div className="aspect-video rounded-xl overflow-hidden bg-secondary-100 dark:bg-secondary-700">
+                  <iframe
+                    src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY_HERE'}&q=${encodeURIComponent(
+                      event.address
+                    )}`}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+              </motion.div>
+            )}
+            </div>
+          )}
 
           {/* Sidebar */}
           <div className="space-y-6">
@@ -262,6 +286,28 @@ export default function EventDetailPage() {
                     <h3 className="text-xl font-bold text-secondary-900 dark:text-white mb-4">
                       Register for Event
                     </h3>
+
+                    {/* BookMyShow Button */}
+                    {event.bookingUrl && (
+                      <a
+                        href={event.bookingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full px-4 py-3 mb-4 bg-gradient-to-r from-[#E53935] to-[#D32F2F] text-white font-semibold rounded-xl hover:from-[#D32F2F] hover:to-[#C62828] transition-all shadow-lg"
+                      >
+                        <Ticket className="w-5 h-5" />
+                        Book on BookMyShow
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+
+                    {event.bookingUrl && (
+                      <div className="flex items-center gap-4 my-4">
+                        <div className="flex-1 h-px bg-secondary-200 dark:bg-secondary-700" />
+                        <span className="text-sm text-secondary-500 dark:text-secondary-400">or register here</span>
+                        <div className="flex-1 h-px bg-secondary-200 dark:bg-secondary-700" />
+                      </div>
+                    )}
 
                     {/* Capacity */}
                     {event.capacity && (
@@ -348,27 +394,29 @@ export default function EventDetailPage() {
               <h3 className="text-lg font-bold text-secondary-900 dark:text-white mb-4">
                 Share Event
               </h3>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => {
-                    navigator.share?.({
-                      title: event.title,
-                      text: event.description,
-                      url: window.location.href,
-                    });
-                  }}
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1">
-                  <Heart className="w-4 h-4 mr-2" />
-                  Save
-                </Button>
-              </div>
+              <SocialShare
+                url={typeof window !== 'undefined' ? window.location.href : ''}
+                title={event.title}
+                description={event.description}
+                variant="icons"
+              />
+            </motion.div>
+
+            {/* Save Event */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-white dark:bg-secondary-800 rounded-2xl p-6 shadow-lg"
+            >
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => toast.success("Event saved!", "You'll receive a reminder before the event.")}
+              >
+                <Heart className="w-4 h-4 mr-2" />
+                Save Event
+              </Button>
             </motion.div>
           </div>
         </div>

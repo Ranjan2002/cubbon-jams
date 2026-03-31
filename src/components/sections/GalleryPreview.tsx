@@ -6,11 +6,30 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, X } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { galleryItems } from "@/lib/data/mockData";
+import { useEvents } from "@/lib/EventsContext";
 
 export default function GalleryPreview() {
+  const { gallery: galleryItems, isLoading } = useEvents();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const previewItems = galleryItems.slice(0, 6);
+
+  if (isLoading) {
+    return (
+      <section className="section-padding bg-secondary-50 dark:bg-secondary-900/50">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <div className="h-6 w-24 bg-secondary-200 dark:bg-secondary-700 rounded-full mx-auto mb-4 animate-pulse" />
+            <div className="h-10 w-64 bg-secondary-200 dark:bg-secondary-700 rounded-lg mx-auto mb-4 animate-pulse" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className={`aspect-square bg-secondary-200 dark:bg-secondary-700 rounded-2xl animate-pulse ${i === 0 ? "md:col-span-2 md:row-span-2" : ""}`} />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="section-padding bg-secondary-50 dark:bg-secondary-900/50">

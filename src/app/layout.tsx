@@ -5,6 +5,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
+import { EventsProvider } from "@/lib/EventsContext";
+import ScrollProgress from "@/components/ui/ScrollProgress";
+import BackToTop from "@/components/ui/BackToTop";
 
 const inter = Inter({ 
   subsets: ["latin"], 
@@ -78,13 +81,17 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased">
         <ThemeProvider>
-          <ToastProvider>
-            <div className="flex min-h-screen flex-col bg-white dark:bg-secondary-900 transition-colors duration-300">
-              <Navbar />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-          </ToastProvider>
+          <EventsProvider>
+            <ToastProvider>
+              <ScrollProgress />
+              <div className="flex min-h-screen flex-col bg-white dark:bg-secondary-900 transition-colors duration-300">
+                <Navbar />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+              <BackToTop />
+            </ToastProvider>
+          </EventsProvider>
         </ThemeProvider>
       </body>
     </html>

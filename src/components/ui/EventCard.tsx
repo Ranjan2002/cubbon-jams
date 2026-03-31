@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Calendar, Clock, MapPin, Users, ArrowRight } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, ArrowRight, Ticket } from "lucide-react";
 import { Event } from "@/lib/types";
 import { formatDate, formatTime } from "@/lib/utils";
 import Button from "./Button";
@@ -194,6 +194,20 @@ export default function EventCard({
                   }}
                 />
               </div>
+            </div>
+          )}
+          {event.bookingUrl && !event.isPast && (
+            <div className="mt-4">
+              <a
+                href={event.bookingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-gradient-to-r from-[#E53935] to-[#D32F2F] text-white text-sm font-semibold rounded-xl hover:from-[#D32F2F] hover:to-[#C62828] transition-all"
+              >
+                <Ticket className="w-4 h-4" />
+                Book Tickets
+              </a>
             </div>
           )}
         </div>

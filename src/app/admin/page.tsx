@@ -21,11 +21,14 @@ import {
   User,
   AlertCircle,
   CheckCircle,
+  ExternalLink,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Input, Textarea, Select } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
-import { events as initialEvents, galleryItems as initialGallery } from "@/lib/data/mockData";
+import ImageUpload from "@/components/ui/ImageUpload";
+import BookMyShowImport from "@/components/ui/BookMyShowImport";
+import { useEvents } from "@/lib/EventsContext";
 import { Event, GalleryItem } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
@@ -219,12 +222,21 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
 
 export default function AdminPage() {
   const toast = useToast();
+  const { 
+    events, 
+    gallery, 
+    addEvent, 
+    updateEvent, 
+    deleteEvent, 
+    addGalleryItem, 
+    deleteGalleryItem,
+    isLoading: isLoadingData 
+  } = useEvents();
+  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [adminUsername, setAdminUsername] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
-  const [events, setEvents] = useState(initialEvents);
-  const [gallery, setGallery] = useState(initialGallery);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingGalleryItem, setEditingGalleryItem] = useState<GalleryItem | null>(null);
@@ -240,6 +252,7 @@ export default function AdminPage() {
     image: "",
     category: "jam" as Event["category"],
     capacity: "",
+    bookingUrl: "",
   });
 
   const [galleryForm, setGalleryForm] = useState({
@@ -350,6 +363,7 @@ export default function AdminPage() {
       image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&h=600&fit=crop",
       category: "jam",
       capacity: "",
+      bookingUrl: "",
     });
     setIsModalOpen(true);
   };
@@ -367,32 +381,60 @@ export default function AdminPage() {
       image: event.image,
       category: event.category,
       capacity: event.capacity?.toString() || "",
+      bookingUrl: (event as Event & { bookingUrl?: string }).bookingUrl || "",
     });
     setIsModalOpen(true);
   };
 
+  // Handle BookMyShow import
+  const handleBookMyShowImport = (data: {
+    title?: string;
+    description?: string;
+    location?: string;
+    address?: string;
+    bookingUrl?: string;
+    date?: string;
+    time?: string;
+    endTime?: string;
+    image?: string;
+    performers?: string[];
+  }) => {
+    setEventForm((prev) => ({
+      ...prev,
+      title: data.title || prev.title,
+      description: data.description || prev.description,
+      location: data.location || prev.location,
+      address: data.address || prev.address,
+      bookingUrl: data.bookingUrl || prev.bookingUrl,
+      date: data.date || prev.date,
+      time: data.time || prev.time,
+      endTime: data.endTime || prev.endTime,
+      image: data.image || prev.image,
+    }));
+    toast.success("Imported!", "Event details have been filled from BookMyShow.");
+  };
+
   const handleSaveEvent = () => {
+    const eventData = {
+      title: eventForm.title,
+      description: eventForm.description,
+      date: eventForm.date,
+      time: eventForm.time,
+      endTime: eventForm.endTime || undefined,
+      location: eventForm.location,
+      address: eventForm.address,
+      image: eventForm.image,
+      category: eventForm.category,
+      capacity: eventForm.capacity ? parseInt(eventForm.capacity) : undefined,
+      bookingUrl: eventForm.bookingUrl || undefined,
+      registered: 0,
+    };
+
     if (editingEvent) {
-      setEvents(
-        events.map((e) =>
-          e.id === editingEvent.id
-            ? {
-                ...e,
-                ...eventForm,
-                capacity: eventForm.capacity ? parseInt(eventForm.capacity) : undefined,
-              }
-            : e
-        )
-      );
+      updateEvent(editingEvent.id, eventData);
       toast.success("Event Updated", `"${eventForm.title}" has been updated successfully.`);
     } else {
-      const newEvent: Event = {
-        id: Date.now().toString(),
-        ...eventForm,
-        capacity: eventForm.capacity ? parseInt(eventForm.capacity) : undefined,
-        registered: 0,
-      };
-      setEvents([newEvent, ...events]);
+      addEvent(eventData);
       toast.success("Event Created", `"${eventForm.title}" has been added to events.`);
     }
     setIsModalOpen(false);
@@ -401,7 +443,7 @@ export default function AdminPage() {
   const handleDeleteEvent = (id: string) => {
     const eventToDelete = events.find(e => e.id === id);
     if (confirm("Are you sure you want to delete this event?")) {
-      setEvents(events.filter((e) => e.id !== id));
+      deleteEvent(id);
       toast.success("Event Deleted", `"${eventToDelete?.title}" has been removed.`);
     }
   };
@@ -420,22 +462,22 @@ export default function AdminPage() {
   };
 
   const handleSaveGalleryItem = () => {
+    const galleryData = {
+      type: "image" as const,
+      title: galleryForm.title,
+      src: galleryForm.src,
+      event: galleryForm.event || undefined,
+      date: galleryForm.date,
+      category: galleryForm.category,
+    };
+
     if (editingGalleryItem) {
-      setGallery(
-        gallery.map((item) =>
-          item.id === editingGalleryItem.id
-            ? { ...item, ...galleryForm, type: "image" as const }
-            : item
-        )
-      );
+      // For now, delete and re-add since we don't have updateGalleryItem with proper typing
+      deleteGalleryItem(editingGalleryItem.id);
+      addGalleryItem(galleryData);
       toast.success("Image Updated", `"${galleryForm.title}" has been updated.`);
     } else {
-      const newItem: GalleryItem = {
-        id: Date.now().toString(),
-        type: "image",
-        ...galleryForm,
-      };
-      setGallery([newItem, ...gallery]);
+      addGalleryItem(galleryData);
       toast.success("Image Added", `"${galleryForm.title}" has been added to gallery.`);
     }
     setIsModalOpen(false);
@@ -444,10 +486,22 @@ export default function AdminPage() {
   const handleDeleteGalleryItem = (id: string) => {
     const itemToDelete = gallery.find(item => item.id === id);
     if (confirm("Are you sure you want to delete this image?")) {
-      setGallery(gallery.filter((item) => item.id !== id));
+      deleteGalleryItem(id);
       toast.success("Image Deleted", `"${itemToDelete?.title}" has been removed.`);
     }
   };
+
+  // Show loading while data loads
+  if (isLoadingData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-secondary-900">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-secondary-400">Loading data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-20 pb-16 bg-secondary-50 dark:bg-secondary-900">
@@ -769,6 +823,11 @@ export default function AdminPage() {
                     }}
                     className="space-y-4"
                   >
+                    {/* BookMyShow Import */}
+                    {!editingEvent && (
+                      <BookMyShowImport onImport={handleBookMyShowImport} />
+                    )}
+
                     <Input
                       label="Event Title"
                       value={eventForm.title}
@@ -841,14 +900,39 @@ export default function AdminPage() {
                       }
                       required
                     />
-                    <Input
-                      label="Image URL"
+                    
+                    {/* Image Upload */}
+                    <ImageUpload
+                      label="Event Image"
                       value={eventForm.image}
-                      onChange={(e) =>
-                        setEventForm({ ...eventForm, image: e.target.value })
+                      onChange={(value) =>
+                        setEventForm({ ...eventForm, image: value })
                       }
-                      required
                     />
+
+                    {/* Booking URL */}
+                    <div>
+                      <Input
+                        label="Booking URL (optional)"
+                        value={eventForm.bookingUrl}
+                        onChange={(e) =>
+                          setEventForm({ ...eventForm, bookingUrl: e.target.value })
+                        }
+                        placeholder="https://in.bookmyshow.com/..."
+                      />
+                      {eventForm.bookingUrl && (
+                        <a
+                          href={eventForm.bookingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-primary-500 hover:text-primary-600 mt-1"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Open booking page
+                        </a>
+                      )}
+                    </div>
+
                     <Select
                       label="Category"
                       value={eventForm.category}
@@ -881,14 +965,16 @@ export default function AdminPage() {
                       }
                       required
                     />
-                    <Input
-                      label="Image URL"
+                    
+                    {/* Image Upload */}
+                    <ImageUpload
+                      label="Photo"
                       value={galleryForm.src}
-                      onChange={(e) =>
-                        setGalleryForm({ ...galleryForm, src: e.target.value })
+                      onChange={(value) =>
+                        setGalleryForm({ ...galleryForm, src: value })
                       }
-                      required
                     />
+
                     <Input
                       label="Event Name"
                       value={galleryForm.event}
