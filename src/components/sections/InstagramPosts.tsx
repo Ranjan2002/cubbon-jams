@@ -162,12 +162,13 @@ export default function InstagramPosts({ compact = false }: InstagramPostsProps)
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mt-8"
+          className="mt-8 flex flex-col items-center text-center"
         >
           {feedSource === "fallback" && posts.length > 0 && (
-            <p className="text-sm text-secondary-500 dark:text-secondary-400 mb-3">
-              Instagram is temporarily unavailable, so this section is showing a gallery preview.
-            </p>
+            <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-700 dark:text-amber-200">
+              <Instagram className="w-4 h-4 shrink-0" />
+              <span>Gallery preview mode while Instagram is temporarily unavailable.</span>
+            </div>
           )}
           <a
             href={profileUrl}
