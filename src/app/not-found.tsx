@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
-import { Home, ArrowLeft, Music, Search } from "lucide-react";
+import { Home, Music, Search } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 export default function NotFound() {
@@ -60,8 +59,8 @@ export default function NotFound() {
             Oops! This page hit a wrong note
           </h2>
           <p className="text-secondary-600 dark:text-secondary-400 text-lg">
-            The page you're looking for seems to have wandered off to another jam session.
-            Don't worry, let's get you back on track!
+            The page you&apos;re looking for seems to have wandered off to another jam session.
+            Don&apos;t worry, let&apos;s get you back on track!
           </p>
         </motion.div>
 
@@ -93,7 +92,7 @@ export default function NotFound() {
           transition={{ delay: 0.6 }}
           className="mt-12 text-sm text-secondary-500 dark:text-secondary-500"
         >
-          "From the park, to your heart" — but not to this page! 🎸
+          &ldquo;From the park, to your heart&rdquo; - but not to this page! 🎸
         </motion.p>
       </div>
     </div>

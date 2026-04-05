@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Link2, Loader2, CheckCircle, AlertCircle, Sparkles, Calendar, Clock, MapPin, Image } from "lucide-react";
+import { Link2, Loader2, CheckCircle, AlertCircle, Sparkles, Calendar, Clock, MapPin, Image as ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "./Button";
 
@@ -229,7 +229,7 @@ export default function BookMyShowImport({
                   )}
                   {fetchedData.image && (
                     <span className="flex items-center gap-1">
-                      <Image className="w-3 h-3" /> Cover image found
+                      <ImageIcon className="w-3 h-3" /> Cover image found
                     </span>
                   )}
                 </div>
