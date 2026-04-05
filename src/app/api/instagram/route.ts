@@ -46,6 +46,30 @@ interface GraphApiMediaItem {
   comments_count?: number;
 }
 
+interface FeedMediaCandidate {
+  url?: string;
+}
+
+interface FeedCarouselItem {
+  image_versions2?: {
+    candidates?: FeedMediaCandidate[];
+  };
+}
+
+interface FeedItem {
+  id: string;
+  code?: string;
+  caption?: { text?: string };
+  media_type?: number;
+  taken_at?: number;
+  like_count?: number;
+  comment_count?: number;
+  image_versions2?: {
+    candidates?: FeedMediaCandidate[];
+  };
+  carousel_media?: FeedCarouselItem[];
+}
+
 function parsePostsFromProfilePayload(payload: unknown) {
   const root = payload as {
     data?: {
@@ -141,6 +165,52 @@ async function fetchPostsFromGraphApi(userId: string, token: string) {
     }));
 }
 
+async function fetchPostsFromFeedByUsername(username: string) {
+  const endpoint = `https://i.instagram.com/api/v1/feed/user/${username}/username/?count=12`;
+  const response = await fetch(endpoint, {
+    headers: {
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "x-ig-app-id": "936619743392459",
+      "x-asbd-id": "129477",
+      accept: "*/*",
+      "accept-language": "en-US,en;q=0.9",
+      referer: `https://www.instagram.com/${username}/`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) return [];
+
+  const payload = (await response.json()) as { items?: FeedItem[] };
+  const items = payload.items ?? [];
+
+  return items
+    .map((item) => {
+      const directImage = item.image_versions2?.candidates?.[0]?.url;
+      const carouselImage = item.carousel_media?.[0]?.image_versions2?.candidates?.[0]?.url;
+      const imageUrl = toJpgFriendlyUrl(directImage || carouselImage);
+      const code = item.code || "";
+
+      return {
+        id: item.id,
+        shortcode: code || item.id,
+        caption: item.caption?.text || "",
+        imageUrl,
+        thumbnailUrl: imageUrl,
+        isVideo: item.media_type === 2,
+        timestamp: item.taken_at ? item.taken_at * 1000 : Date.now(),
+        likes: item.like_count || 0,
+        comments: item.comment_count || 0,
+        permalink: code
+          ? `https://www.instagram.com/p/${code}/`
+          : `https://www.instagram.com/${username}/`,
+      };
+    })
+    .filter((item) => Boolean(item.imageUrl))
+    .slice(0, 12);
+}
+
 async function fetchProfilePayload(username: string) {
   const urls = [
     `https://i.instagram.com/api/v1/users/web_profile_info/?username=${username}`,
@@ -191,6 +261,15 @@ export async function GET() {
           source: "instagram",
         }, { headers: { "cache-control": "no-store" } });
       }
+    }
+
+    const feedPosts = await fetchPostsFromFeedByUsername(username);
+    if (feedPosts.length) {
+      return NextResponse.json({
+        posts: feedPosts,
+        profileUrl: `https://www.instagram.com/${username}/`,
+        source: "instagram",
+      }, { headers: { "cache-control": "no-store" } });
     }
 
     const payload = await fetchProfilePayload(username);
