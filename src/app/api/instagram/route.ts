@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { galleryItems } from "@/lib/data/mockData";
 
 export const revalidate = 900;
 
@@ -91,22 +92,18 @@ function parsePostsFromProfilePayload(payload: unknown) {
 }
 
 function fallbackPosts(username: string) {
-  return [
-    {
-      id: "fallback-1",
-      shortcode: "fallback-1",
-      caption: "See the latest posts directly on Instagram.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=900&h=900&fit=crop",
-      thumbnailUrl:
-        "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=480&h=480&fit=crop",
-      isVideo: false,
-      timestamp: Date.now(),
-      likes: 0,
-      comments: 0,
-      permalink: `https://www.instagram.com/${username}/`,
-    },
-  ];
+  return galleryItems.slice(0, 8).map((item, index) => ({
+    id: `fallback-gallery-${item.id}`,
+    shortcode: `fallback-gallery-${item.id}`,
+    caption: `${item.title}${item.event ? ` · ${item.event}` : ""}`,
+    imageUrl: item.src,
+    thumbnailUrl: item.thumbnail || item.src,
+    isVideo: item.type === "video",
+    timestamp: Date.parse(item.date) || Date.now() - index * 86400000,
+    likes: 0,
+    comments: 0,
+    permalink: `https://www.instagram.com/${username}/`,
+  }));
 }
 
 async function fetchPostsFromGraphApi(userId: string, token: string) {

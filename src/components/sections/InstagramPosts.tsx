@@ -30,6 +30,7 @@ interface InstagramPostsProps {
 export default function InstagramPosts({ compact = false }: InstagramPostsProps) {
   const [posts, setPosts] = useState<InstagramPost[]>([]);
   const [profileUrl, setProfileUrl] = useState("https://www.instagram.com/cubbon_jams/");
+  const [feedSource, setFeedSource] = useState<"instagram" | "fallback">("instagram");
   const [isLoading, setIsLoading] = useState(true);
   const [failedImageIds, setFailedImageIds] = useState<Record<string, boolean>>({});
 
@@ -45,9 +46,11 @@ export default function InstagramPosts({ compact = false }: InstagramPostsProps)
         if (!active) return;
         setPosts((data.posts || []).slice(0, compact ? 4 : 8));
         setProfileUrl(data.profileUrl || "https://www.instagram.com/cubbon_jams/");
+        setFeedSource(data.source || "instagram");
       } catch {
         if (!active) return;
         setPosts([]);
+        setFeedSource("fallback");
       } finally {
         if (active) setIsLoading(false);
       }
@@ -112,20 +115,22 @@ export default function InstagramPosts({ compact = false }: InstagramPostsProps)
                       </p>
                     </div>
                   ) : (
-                    <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={`/api/instagram/image?url=${encodeURIComponent(
-                          post.thumbnailUrl || post.imageUrl
-                        )}`}
-                        alt={post.caption?.slice(0, 100) || "Instagram post"}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                        onError={() =>
-                          setFailedImageIds((prev) => ({ ...prev, [post.id]: true }))
-                        }
-                      />
-                    </>
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={
+                        feedSource === "fallback"
+                          ? post.thumbnailUrl || post.imageUrl
+                          : `/api/instagram/image?url=${encodeURIComponent(
+                              post.thumbnailUrl || post.imageUrl
+                            )}`
+                      }
+                      alt={post.caption?.slice(0, 100) || "Instagram post"}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                      onError={() =>
+                        setFailedImageIds((prev) => ({ ...prev, [post.id]: true }))
+                      }
+                    />
                   )}
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -159,6 +164,11 @@ export default function InstagramPosts({ compact = false }: InstagramPostsProps)
           viewport={{ once: true }}
           className="text-center mt-8"
         >
+          {feedSource === "fallback" && posts.length > 0 && (
+            <p className="text-sm text-secondary-500 dark:text-secondary-400 mb-3">
+              Instagram is temporarily unavailable, so this section is showing a gallery preview.
+            </p>
+          )}
           <a
             href={profileUrl}
             target="_blank"
