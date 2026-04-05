@@ -1,4 +1,4 @@
-import { Event, GalleryItem, Testimonial, TeamMember } from "../types";
+import { Event, GalleryItem, TeamMember } from "../types";
 
 export const events: Event[] = [
   {
@@ -219,45 +219,6 @@ export const galleryItems: GalleryItem[] = [
     event: "Cubbon Sunday Jam",
     date: "2025-05-12",
     category: "acoustic",
-  },
-];
-
-export const testimonials: Testimonial[] = [
-  {
-    id: "1",
-    name: "Aditya Sharma",
-    role: "Singer-Songwriter",
-    content:
-      "Cubbon Jams gave me the confidence to perform in front of people for the first time. The community is incredibly supportive and welcoming. It's not just about music, it's about finding your tribe.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
-    rating: 5,
-  },
-  {
-    id: "2",
-    name: "Priya Menon",
-    role: "Guitarist",
-    content:
-      "I moved to Bangalore not knowing anyone. Through Cubbon Jams, I've made lifelong friends and improved my guitar skills tremendously. Sunday mornings have become the highlight of my week!",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
-    rating: 5,
-  },
-  {
-    id: "3",
-    name: "Rahul Krishnan",
-    role: "Cajon Player",
-    content:
-      "The energy at Cubbon Jams is unmatched. Where else can you jam with random strangers and leave feeling like you've known them forever? This community is pure magic.",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
-    rating: 5,
-  },
-  {
-    id: "4",
-    name: "Sneha Reddy",
-    role: "Ukulele Enthusiast",
-    content:
-      "I started as a complete beginner, just listening and watching. Within months, I was performing at open mic nights. Cubbon Jams believes in everyone's potential.",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop",
-    rating: 5,
   },
 ];
 

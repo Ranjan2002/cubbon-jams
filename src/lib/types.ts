@@ -28,15 +28,6 @@ export interface GalleryItem {
   category: "acoustic" | "band" | "open-mic" | "workshop" | "all";
 }
 
-export interface Testimonial {
-  id: string;
-  name: string;
-  role: string;
-  content: string;
-  image: string;
-  rating: number;
-}
-
 export interface TeamMember {
   id: string;
   name: string;

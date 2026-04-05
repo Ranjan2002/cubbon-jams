@@ -1,9 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Music2, Users, Calendar, Play } from "lucide-react";
 import Button from "@/components/ui/Button";
+import {
+  SITE_SETTINGS_KEY,
+  SiteSettings,
+  defaultSiteSettings,
+} from "@/lib/siteSettings";
 
 // Fixed positions to avoid hydration mismatch
 const particlePositions = [
@@ -29,7 +35,28 @@ const particlePositions = [
   { left: "8%", top: "90%", delay: 1.9, duration: 3.25 },
 ];
 
+const quickLinks = [
+  { href: "/events", label: "Browse events" },
+  { href: "/gallery", label: "See gallery" },
+  { href: "/join", label: "Join the crew" },
+  { href: "/contact", label: "Ask a question" },
+];
+
 export default function Hero() {
+  const [siteSettings, setSiteSettings] =
+    useState<SiteSettings>(defaultSiteSettings);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(SITE_SETTINGS_KEY);
+      if (!stored) return;
+      const parsed = JSON.parse(stored) as Partial<SiteSettings>;
+      setSiteSettings((prev) => ({ ...prev, ...parsed }));
+    } catch {
+      // Keep default content if settings are malformed.
+    }
+  }, []);
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
       {/* Background */}
@@ -76,7 +103,7 @@ export default function Hero() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm mb-8"
           >
             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            Every Sunday at Cubbon Park
+            {siteSettings.heroBadge}
           </motion.div>
 
           {/* Main Heading */}
@@ -86,10 +113,10 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight"
           >
-            <span className="text-primary-500">Cubbon Jams</span>
+            <span className="text-primary-500">{siteSettings.heroTitlePrimary}</span>
             <br />
             <span className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl">
-              Where Music Meets Community
+              {siteSettings.heroTitleSecondary}
             </span>
           </motion.h1>
 
@@ -100,7 +127,7 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xl sm:text-2xl text-white/80 mb-8 font-light italic"
           >
-            &ldquo;From the park, to your heart&rdquo;
+            &ldquo;{siteSettings.heroTagline}&rdquo;
           </motion.p>
 
           {/* Description */}
@@ -110,8 +137,7 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="text-base sm:text-lg text-white/70 mb-10 max-w-2xl mx-auto"
           >
-            Join Bangalore&apos;s most vibrant music community. Open jam sessions, live
-            performances, and unforgettable experiences await you every week.
+            {siteSettings.heroDescription}
           </motion.p>
 
           {/* CTA Buttons */}
@@ -121,18 +147,33 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link href="/events">
+            <Link href={siteSettings.heroPrimaryCtaHref || "/events"}>
               <Button variant="primary" size="lg">
                 <Calendar className="w-5 h-5 mr-2" />
-                View Events
+                {siteSettings.heroPrimaryCtaLabel || "View Events"}
               </Button>
             </Link>
-            <Link href="/join">
+            <Link href={siteSettings.heroSecondaryCtaHref || "/join"}>
               <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-secondary-900">
                 <Users className="w-5 h-5 mr-2" />
-                Join Community
+                {siteSettings.heroSecondaryCtaLabel || "Join Community"}
               </Button>
             </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+            className="flex flex-wrap items-center justify-center gap-3 mt-6"
+          >
+            {quickLinks.map((link) => (
+              <Link key={link.href} href={link.href}>
+                <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-white/15">
+                  {link.label}
+                </span>
+              </Link>
+            ))}
           </motion.div>
 
           {/* Stats */}

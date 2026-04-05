@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Camera, X, ChevronLeft, ChevronRight, Download, Share2, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { useEvents } from "@/lib/EventsContext";
 import { useToast } from "@/components/ui/Toast";
+import InstagramPosts from "@/components/sections/InstagramPosts";
 
 const categories = [
   { value: "all", label: "All" },
@@ -399,6 +400,8 @@ export default function GalleryPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <InstagramPosts />
     </div>
   );
 }

@@ -13,6 +13,11 @@ interface EventsContextType {
   addGalleryItem: (item: Omit<GalleryItem, "id">) => void;
   updateGalleryItem: (id: string, item: Partial<GalleryItem>) => void;
   deleteGalleryItem: (id: string) => void;
+  replaceEvents: (events: Event[]) => void;
+  replaceGallery: (galleryItems: GalleryItem[]) => void;
+  resetEvents: () => void;
+  resetGallery: () => void;
+  resetAllData: () => void;
   isLoading: boolean;
   refreshData: () => void;
 }
@@ -134,6 +139,29 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     setGallery((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
+  const replaceEvents = useCallback((nextEvents: Event[]) => {
+    setEvents(nextEvents);
+  }, []);
+
+  const replaceGallery = useCallback((nextGallery: GalleryItem[]) => {
+    setGallery(nextGallery);
+  }, []);
+
+  const resetEvents = useCallback(() => {
+    setEvents(mockEvents);
+  }, []);
+
+  const resetGallery = useCallback(() => {
+    setGallery(mockGallery);
+  }, []);
+
+  const resetAllData = useCallback(() => {
+    setEvents(mockEvents);
+    setGallery(mockGallery);
+    localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(mockEvents));
+    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(mockGallery));
+  }, []);
+
   return (
     <EventsContext.Provider
       value={{
@@ -145,6 +173,11 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         addGalleryItem,
         updateGalleryItem,
         deleteGalleryItem,
+        replaceEvents,
+        replaceGallery,
+        resetEvents,
+        resetGallery,
+        resetAllData,
         isLoading,
         refreshData,
       }}
