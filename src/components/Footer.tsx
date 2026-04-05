@@ -12,6 +12,7 @@ import {
   Phone,
   Heart,
   ExternalLink,
+  Shield,
 } from "lucide-react";
 
 const footerLinks = {
@@ -180,10 +181,20 @@ export default function Footer() {
             <p className="text-secondary-500 text-sm text-center sm:text-left">
               © {new Date().getFullYear()} Cubbon Jams. All rights reserved.
             </p>
-            <p className="text-secondary-500 text-sm flex items-center gap-1">
-              Made with <Heart className="w-4 h-4 text-primary-500 fill-primary-500" /> in
-              Bangalore
-            </p>
+            <div className="flex items-center gap-3 text-secondary-500 text-sm">
+              <p className="flex items-center gap-1">
+                Made with <Heart className="w-4 h-4 text-primary-500 fill-primary-500" /> in
+                Bangalore
+              </p>
+              <Link
+                href="/admin"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-secondary-800 text-secondary-400 hover:text-white hover:bg-primary-500 transition-colors"
+                aria-label="Admin"
+                title="Admin"
+              >
+                <Shield className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>

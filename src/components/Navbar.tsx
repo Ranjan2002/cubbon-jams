@@ -108,7 +108,7 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* Right Side - Theme Toggle & Admin */}
+          {/* Right Side - Theme Toggle */}
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Theme Toggle */}
             <motion.button
@@ -128,17 +128,6 @@ export default function Navbar() {
                 <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </motion.button>
-
-            {/* Admin Link (Desktop) */}
-            <Link href="/admin" className="hidden sm:block">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-4 py-2 rounded-xl bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 text-sm font-medium hover:bg-secondary-800 dark:hover:bg-secondary-100 transition-colors"
-              >
-                Admin
-              </motion.div>
-            </Link>
 
             {/* Mobile Menu Button */}
             <motion.button
@@ -194,18 +183,6 @@ export default function Navbar() {
                     </motion.div>
                   );
                 })}
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: navLinks.length * 0.05 }}
-                >
-                  <Link href="/admin">
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 font-medium">
-                      <Users className="w-5 h-5" />
-                      <span>Admin Panel</span>
-                    </div>
-                  </Link>
-                </motion.div>
               </div>
             </motion.div>
           )}
