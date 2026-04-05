@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { galleryItems } from "@/lib/data/mockData";
 
-export const revalidate = 900;
+export const dynamic = "force-dynamic";
 
 interface InstagramGraphNode {
   id: string;
@@ -55,9 +55,17 @@ function parsePostsFromProfilePayload(payload: unknown) {
         };
       };
     };
+    user?: {
+      edge_owner_to_timeline_media?: {
+        edges?: Array<{ node: InstagramGraphNode }>;
+      };
+    };
   };
 
-  const edges = root.data?.user?.edge_owner_to_timeline_media?.edges ?? [];
+  const edges =
+    root.data?.user?.edge_owner_to_timeline_media?.edges ??
+    root.user?.edge_owner_to_timeline_media?.edges ??
+    [];
 
   return edges
     .map((edge) => edge.node)
@@ -110,7 +118,7 @@ async function fetchPostsFromGraphApi(userId: string, token: string) {
   const fields =
     "id,caption,media_url,thumbnail_url,media_type,permalink,timestamp,like_count,comments_count";
   const endpoint = `https://graph.instagram.com/${userId}/media?fields=${fields}&access_token=${token}`;
-  const response = await fetch(endpoint, { next: { revalidate } });
+  const response = await fetch(endpoint, { cache: "no-store" });
   if (!response.ok) return [];
 
   const payload = (await response.json()) as { data?: GraphApiMediaItem[] };
@@ -133,10 +141,45 @@ async function fetchPostsFromGraphApi(userId: string, token: string) {
     }));
 }
 
+async function fetchProfilePayload(username: string) {
+  const urls = [
+    `https://i.instagram.com/api/v1/users/web_profile_info/?username=${username}`,
+    `https://www.instagram.com/api/v1/users/web_profile_info/?username=${username}`,
+  ];
+
+  for (const url of urls) {
+    const response = await fetch(url, {
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "x-ig-app-id": "936619743392459",
+        "x-asbd-id": "129477",
+        accept: "*/*",
+        "accept-language": "en-US,en;q=0.9",
+        referer: `https://www.instagram.com/${username}/`,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) continue;
+
+    try {
+      const payload = await response.json();
+      return payload;
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 export async function GET() {
   const username = process.env.INSTAGRAM_USERNAME || "cubbon_jams";
-  const graphUserId = process.env.INSTAGRAM_GRAPH_USER_ID;
-  const graphToken = process.env.INSTAGRAM_GRAPH_ACCESS_TOKEN;
+  const graphUserId =
+    process.env.INSTAGRAM_GRAPH_USER_ID || process.env.INSTAGRAM_USER_ID;
+  const graphToken =
+    process.env.INSTAGRAM_GRAPH_ACCESS_TOKEN || process.env.INSTAGRAM_ACCESS_TOKEN;
 
   try {
     if (graphUserId && graphToken) {
@@ -146,43 +189,28 @@ export async function GET() {
           posts: graphPosts,
           profileUrl: `https://www.instagram.com/${username}/`,
           source: "instagram",
-        });
+        }, { headers: { "cache-control": "no-store" } });
       }
     }
 
-    const response = await fetch(
-      `https://www.instagram.com/api/v1/users/web_profile_info/?username=${username}`,
-      {
-        headers: {
-          "user-agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-          "x-ig-app-id": "936619743392459",
-          accept: "*/*",
-          referer: `https://www.instagram.com/${username}/`,
-        },
-        next: { revalidate },
-      }
-    );
-
-    if (!response.ok) {
+    const payload = await fetchProfilePayload(username);
+    if (!payload) {
       return NextResponse.json(
         {
           posts: fallbackPosts(username),
           profileUrl: `https://www.instagram.com/${username}/`,
           source: "fallback",
         },
-        { status: 200 }
+        { status: 200, headers: { "cache-control": "no-store" } }
       );
     }
-
-    const payload = await response.json();
     const posts = parsePostsFromProfilePayload(payload);
 
     return NextResponse.json({
       posts: posts.length ? posts : fallbackPosts(username),
       profileUrl: `https://www.instagram.com/${username}/`,
       source: posts.length ? "instagram" : "fallback",
-    });
+    }, { headers: { "cache-control": "no-store" } });
   } catch {
     return NextResponse.json(
       {
@@ -190,7 +218,7 @@ export async function GET() {
         profileUrl: `https://www.instagram.com/${username}/`,
         source: "fallback",
       },
-      { status: 200 }
+      { status: 200, headers: { "cache-control": "no-store" } }
     );
   }
 }
