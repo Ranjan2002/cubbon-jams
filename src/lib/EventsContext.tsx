@@ -27,6 +27,32 @@ const EventsContext = createContext<EventsContextType | undefined>(undefined);
 const EVENTS_STORAGE_KEY = "cubbon_jams_events";
 const GALLERY_STORAGE_KEY = "cubbon_jams_gallery";
 
+function isLegacySeedEventsData(data: unknown): data is Event[] {
+  if (!Array.isArray(data) || data.length === 0) return false;
+  return data.some(
+    (item) =>
+      typeof item === "object" &&
+      item !== null &&
+      "id" in item &&
+      "title" in item &&
+      (item as { id?: string; title?: string }).id === "1" &&
+      (item as { id?: string; title?: string }).title === "Cubbon Sunday Jam"
+  );
+}
+
+function isLegacySeedGalleryData(data: unknown): data is GalleryItem[] {
+  if (!Array.isArray(data) || data.length === 0) return false;
+  return data.some(
+    (item) =>
+      typeof item === "object" &&
+      item !== null &&
+      "id" in item &&
+      "title" in item &&
+      (item as { id?: string; title?: string }).id === "1" &&
+      (item as { id?: string; title?: string }).title === "Sunday Morning Jam"
+  );
+}
+
 export function EventsProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
@@ -42,7 +68,12 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
         if (storedEvents) {
           const parsed = JSON.parse(storedEvents);
-          setEvents(Array.isArray(parsed) ? parsed : mockEvents);
+          if (isLegacySeedEventsData(parsed)) {
+            setEvents([]);
+            localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify([]));
+          } else {
+            setEvents(Array.isArray(parsed) ? parsed : mockEvents);
+          }
         } else {
           // Initialize with mock data
           setEvents(mockEvents);
@@ -51,7 +82,12 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
         if (storedGallery) {
           const parsed = JSON.parse(storedGallery);
-          setGallery(Array.isArray(parsed) ? parsed : mockGallery);
+          if (isLegacySeedGalleryData(parsed)) {
+            setGallery([]);
+            localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify([]));
+          } else {
+            setGallery(Array.isArray(parsed) ? parsed : mockGallery);
+          }
         } else {
           // Initialize with mock data
           setGallery(mockGallery);
