@@ -26,6 +26,7 @@ import {
   Copy,
   Star,
   StarOff,
+  Minus,
   CheckSquare,
   Square,
   ArrowUpDown,
@@ -75,9 +76,44 @@ const galleryCategories = [
 
 const defaultEventImage =
   "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&h=600&fit=crop";
+const ADMIN_ACTIVITY_KEY = "cubbon_jams_admin_activity";
+
+interface AdminActivity {
+  id: string;
+  message: string;
+  createdAt: string;
+  tone: "info" | "success" | "warning";
+}
 
 function downloadJson(filename: string, data: unknown) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function toCsvValue(value: unknown) {
+  if (value === null || value === undefined) return "";
+  const text = String(value);
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function downloadCsv(
+  filename: string,
+  headers: string[],
+  rows: Array<Array<string | number | boolean | null | undefined>>
+) {
+  const csv = [
+    headers.map((header) => toCsvValue(header)).join(","),
+    ...rows.map((row) => row.map((cell) => toCsvValue(cell)).join(",")),
+  ].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -297,6 +333,7 @@ export default function AdminPage() {
   const [announcement, setAnnouncement] =
     useState<SiteAnnouncement>(defaultSiteAnnouncement);
   const [isSavingSiteSettings, setIsSavingSiteSettings] = useState(false);
+  const [activityLog, setActivityLog] = useState<AdminActivity[]>([]);
   
   const [eventForm, setEventForm] = useState({
     title: "",
@@ -309,6 +346,7 @@ export default function AdminPage() {
     image: "",
     category: "jam" as Event["category"],
     capacity: "",
+    performers: "",
     bookingUrl: "",
   });
 
@@ -416,6 +454,43 @@ export default function AdminPage() {
     }
   }, []);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(ADMIN_ACTIVITY_KEY);
+      if (!stored) return;
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        setActivityLog(parsed as AdminActivity[]);
+      }
+    } catch {
+      // ignore malformed activity log
+    }
+  }, []);
+
+  const addActivity = (
+    message: string,
+    tone: AdminActivity["tone"] = "info"
+  ) => {
+    const entry: AdminActivity = {
+      id: `activity_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      message,
+      createdAt: new Date().toISOString(),
+      tone,
+    };
+
+    setActivityLog((prev) => {
+      const next = [entry, ...prev].slice(0, 20);
+      localStorage.setItem(ADMIN_ACTIVITY_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const clearActivityLog = () => {
+    setActivityLog([]);
+    localStorage.setItem(ADMIN_ACTIVITY_KEY, JSON.stringify([]));
+    toast.info("Activity cleared", "Admin activity log was cleared.");
+  };
+
   // Handle logout
   const handleLogout = () => {
     localStorage.removeItem("admin_auth");
@@ -494,6 +569,7 @@ export default function AdminPage() {
       image: defaultEventImage,
       category: "jam",
       capacity: "",
+      performers: "",
       bookingUrl: "",
     });
     setIsModalOpen(true);
@@ -512,6 +588,7 @@ export default function AdminPage() {
       image: event.image,
       category: event.category,
       capacity: event.capacity?.toString() || "",
+      performers: (event.performers || []).join(", "),
       bookingUrl: (event as Event & { bookingUrl?: string }).bookingUrl || "",
     });
     setIsModalOpen(true);
@@ -610,6 +687,7 @@ export default function AdminPage() {
     if (!confirm(`Delete ${selectedEventIds.length} selected event(s)?`)) return;
     selectedEventIds.forEach((id) => deleteEvent(id));
     toast.success("Events deleted", `${selectedEventIds.length} event(s) removed.`);
+    addActivity(`Deleted ${selectedEventIds.length} selected event(s).`, "warning");
     setSelectedEventIds([]);
   };
 
@@ -619,6 +697,23 @@ export default function AdminPage() {
       featured ? "Events featured" : "Events unfeatured",
       `${selectedEventIds.length} event(s) updated.`
     );
+    addActivity(
+      `${featured ? "Featured" : "Unfeatured"} ${selectedEventIds.length} event(s).`,
+      "success"
+    );
+    setSelectedEventIds([]);
+  };
+
+  const handleBulkStatusEvents = (isPast: boolean) => {
+    selectedEventIds.forEach((id) => updateEvent(id, { isPast }));
+    toast.success(
+      isPast ? "Events marked past" : "Events marked upcoming",
+      `${selectedEventIds.length} event(s) updated.`
+    );
+    addActivity(
+      `Marked ${selectedEventIds.length} event(s) as ${isPast ? "past" : "upcoming"}.`,
+      "info"
+    );
     setSelectedEventIds([]);
   };
 
@@ -627,7 +722,34 @@ export default function AdminPage() {
     if (!confirm(`Delete ${selectedGalleryIds.length} selected image(s)?`)) return;
     selectedGalleryIds.forEach((id) => deleteGalleryItem(id));
     toast.success("Gallery cleaned", `${selectedGalleryIds.length} image(s) removed.`);
+    addActivity(`Deleted ${selectedGalleryIds.length} selected gallery item(s).`, "warning");
     setSelectedGalleryIds([]);
+  };
+
+  const handleRemoveDuplicateGalleryItems = () => {
+    const seen = new Set<string>();
+    const duplicateIds: string[] = [];
+
+    gallery.forEach((item) => {
+      const key = item.src.trim().toLowerCase();
+      if (seen.has(key)) {
+        duplicateIds.push(item.id);
+      } else {
+        seen.add(key);
+      }
+    });
+
+    if (!duplicateIds.length) {
+      toast.info("No duplicates found", "Gallery currently has unique image sources.");
+      return;
+    }
+
+    if (!confirm(`Remove ${duplicateIds.length} duplicate image(s) from gallery?`)) return;
+
+    duplicateIds.forEach((id) => deleteGalleryItem(id));
+    setSelectedGalleryIds((prev) => prev.filter((id) => !duplicateIds.includes(id)));
+    toast.success("Duplicates removed", `${duplicateIds.length} image(s) removed.`);
+    addActivity(`Removed ${duplicateIds.length} duplicate gallery image(s).`, "success");
   };
 
   const handleExportBackup = () => {
@@ -639,6 +761,87 @@ export default function AdminPage() {
       exportedAt: new Date().toISOString(),
     });
     toast.success("Backup exported", "Your website content backup has been downloaded.");
+    addActivity("Exported full JSON backup.", "info");
+  };
+
+  const handleExportEventsCsv = () => {
+    const headers = [
+      "id",
+      "title",
+      "description",
+      "date",
+      "time",
+      "endTime",
+      "location",
+      "address",
+      "category",
+      "capacity",
+      "registered",
+      "isPast",
+      "featured",
+      "bookingUrl",
+      "performers",
+      "image",
+    ];
+
+    const rows = events.map((event) => [
+      event.id,
+      event.title,
+      event.description,
+      event.date,
+      event.time,
+      event.endTime || "",
+      event.location,
+      event.address,
+      event.category,
+      event.capacity ?? "",
+      event.registered ?? 0,
+      Boolean(event.isPast),
+      Boolean(event.featured),
+      event.bookingUrl || "",
+      (event.performers || []).join(" | "),
+      event.image,
+    ]);
+
+    downloadCsv(
+      `cubbon-jams-events-${new Date().toISOString().slice(0, 10)}.csv`,
+      headers,
+      rows
+    );
+    toast.success("Events exported", "CSV export downloaded successfully.");
+    addActivity("Exported events CSV.", "info");
+  };
+
+  const handleExportGalleryCsv = () => {
+    const headers = [
+      "id",
+      "type",
+      "title",
+      "src",
+      "thumbnail",
+      "event",
+      "date",
+      "category",
+    ];
+
+    const rows = gallery.map((item) => [
+      item.id,
+      item.type,
+      item.title,
+      item.src,
+      item.thumbnail || "",
+      item.event || "",
+      item.date,
+      item.category,
+    ]);
+
+    downloadCsv(
+      `cubbon-jams-gallery-${new Date().toISOString().slice(0, 10)}.csv`,
+      headers,
+      rows
+    );
+    toast.success("Gallery exported", "CSV export downloaded successfully.");
+    addActivity("Exported gallery CSV.", "info");
   };
 
   const handleBackupUpload = async (file: File) => {
@@ -670,11 +873,13 @@ export default function AdminPage() {
       );
     }
     toast.success("Backup restored", "Website content was imported successfully.");
+    addActivity("Imported backup JSON and restored content.", "success");
   };
 
   const handleBulkGallerySubmit = (items: Omit<GalleryItem, "id">[]) => {
     items.forEach((item) => addGalleryItem(item));
     toast.success("Bulk upload complete", `${items.length} image(s) added to gallery.`);
+    addActivity(`Bulk uploaded ${items.length} gallery image(s).`, "success");
   };
 
   const handleSaveSiteSettings = async () => {
@@ -719,6 +924,9 @@ export default function AdminPage() {
       "Past events updated",
       `${updated.length} event(s) marked as past based on date.`
     );
+    if (updated.length > 0) {
+      addActivity(`Auto-marked ${updated.length} event(s) as past.`, "info");
+    }
   };
 
   const handleCreateNextSundayJam = () => {
@@ -747,6 +955,7 @@ export default function AdminPage() {
       bookingUrl: undefined,
     });
     toast.success("Weekly jam created", `New Sunday jam scheduled for ${nextSunday}.`);
+    addActivity(`Created Sunday Jam event for ${nextSunday}.`, "success");
   };
 
   const handleResetDemoData = () => {
@@ -754,6 +963,7 @@ export default function AdminPage() {
     resetAllData();
     clearSelections();
     toast.warning("Demo data restored", "All local content was reset to the default state.");
+    addActivity("Reset all local content to demo defaults.", "warning");
   };
 
   // Handle BookMyShow import
@@ -780,11 +990,28 @@ export default function AdminPage() {
       time: data.time || prev.time,
       endTime: data.endTime || prev.endTime,
       image: data.image || prev.image,
+      performers:
+        data.performers && data.performers.length > 0
+          ? data.performers.join(", ")
+          : prev.performers,
     }));
     toast.success("Imported!", "Event details have been filled from BookMyShow.");
   };
 
+  const adjustEventRegistrations = (event: Event, delta: number) => {
+    const current = event.registered || 0;
+    const capacity = event.capacity;
+    const next = Math.max(0, current + delta);
+    const bounded = capacity ? Math.min(next, capacity) : next;
+    updateEvent(event.id, { registered: bounded });
+  };
+
   const handleSaveEvent = () => {
+    const performers = eventForm.performers
+      .split(",")
+      .map((name) => name.trim())
+      .filter(Boolean);
+
     const eventData = {
       title: eventForm.title,
       description: eventForm.description,
@@ -796,6 +1023,7 @@ export default function AdminPage() {
       image: eventForm.image,
       category: eventForm.category,
       capacity: eventForm.capacity ? parseInt(eventForm.capacity) : undefined,
+      performers: performers.length ? performers : undefined,
       bookingUrl: eventForm.bookingUrl || undefined,
       registered: 0,
     };
@@ -803,9 +1031,11 @@ export default function AdminPage() {
     if (editingEvent) {
       updateEvent(editingEvent.id, eventData);
       toast.success("Event Updated", `"${eventForm.title}" has been updated successfully.`);
+      addActivity(`Updated event: ${eventForm.title}.`, "success");
     } else {
       addEvent(eventData);
       toast.success("Event Created", `"${eventForm.title}" has been added to events.`);
+      addActivity(`Created event: ${eventForm.title}.`, "success");
     }
     setIsModalOpen(false);
   };
@@ -815,6 +1045,7 @@ export default function AdminPage() {
     if (confirm("Are you sure you want to delete this event?")) {
       deleteEvent(id);
       toast.success("Event Deleted", `"${eventToDelete?.title}" has been removed.`);
+      addActivity(`Deleted event: ${eventToDelete?.title || id}.`, "warning");
     }
   };
 
@@ -844,9 +1075,11 @@ export default function AdminPage() {
     if (editingGalleryItem) {
       updateGalleryItem(editingGalleryItem.id, galleryData);
       toast.success("Image Updated", `"${galleryForm.title}" has been updated.`);
+      addActivity(`Updated gallery item: ${galleryForm.title}.`, "success");
     } else {
       addGalleryItem(galleryData);
       toast.success("Image Added", `"${galleryForm.title}" has been added to gallery.`);
+      addActivity(`Added gallery item: ${galleryForm.title}.`, "success");
     }
     setIsModalOpen(false);
   };
@@ -856,6 +1089,7 @@ export default function AdminPage() {
     if (confirm("Are you sure you want to delete this image?")) {
       deleteGalleryItem(id);
       toast.success("Image Deleted", `"${itemToDelete?.title}" has been removed.`);
+      addActivity(`Deleted gallery item: ${itemToDelete?.title || id}.`, "warning");
     }
   };
 
@@ -1072,6 +1306,55 @@ export default function AdminPage() {
               </div>
             </div>
 
+            <div className="bg-white dark:bg-secondary-800 rounded-2xl p-6 shadow-lg border border-secondary-200/70 dark:border-secondary-700/70">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-secondary-900 dark:text-white">Admin Activity</h2>
+                  <p className="text-secondary-500 dark:text-secondary-400 text-sm">
+                    Latest actions performed in this admin panel.
+                  </p>
+                </div>
+                <Button type="button" variant="ghost" onClick={clearActivityLog}>
+                  Clear Log
+                </Button>
+              </div>
+
+              {activityLog.length === 0 ? (
+                <p className="text-sm text-secondary-500 dark:text-secondary-400">
+                  No activity yet. Actions you perform here will appear in this timeline.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {activityLog.slice(0, 8).map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-start justify-between gap-3 p-3 rounded-xl bg-secondary-50 dark:bg-secondary-700"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-secondary-900 dark:text-white break-words">
+                          {item.message}
+                        </p>
+                        <p className="text-xs text-secondary-500 dark:text-secondary-400 mt-1">
+                          {new Date(item.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <span
+                        className={`text-[10px] px-2 py-1 rounded-full uppercase tracking-[0.12em] font-semibold ${
+                          item.tone === "warning"
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                            : item.tone === "success"
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                            : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+                        }`}
+                      >
+                        {item.tone}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Recent Events */}
             <div className="bg-white dark:bg-secondary-800 rounded-2xl p-6 shadow-lg">
               <h2 className="text-xl font-bold text-secondary-900 dark:text-white mb-4">
@@ -1132,6 +1415,10 @@ export default function AdminPage() {
                   <Button variant="outline" onClick={() => setSelectedEventIds(filteredEvents.map((event) => event.id))}>
                     <CheckSquare className="w-5 h-5 mr-2" />
                     Select Visible
+                  </Button>
+                  <Button variant="outline" onClick={handleExportEventsCsv}>
+                    <Download className="w-5 h-5 mr-2" />
+                    Export CSV
                   </Button>
                   <Button variant="primary" onClick={handleAddEvent}>
                     <Plus className="w-5 h-5 mr-2" />
@@ -1195,6 +1482,14 @@ export default function AdminPage() {
                       <StarOff className="w-4 h-4 mr-2" />
                       Unfeature
                     </Button>
+                    <Button variant="secondary" onClick={() => handleBulkStatusEvents(false)}>
+                      <ArrowUpDown className="w-4 h-4 mr-2" />
+                      Mark Upcoming
+                    </Button>
+                    <Button variant="secondary" onClick={() => handleBulkStatusEvents(true)}>
+                      <ArrowUpDown className="w-4 h-4 mr-2" />
+                      Mark Past
+                    </Button>
                     <Button variant="secondary" onClick={handleBulkDeleteEvents}>
                       <Trash2 className="w-4 h-4 mr-2" />
                       Delete
@@ -1238,6 +1533,9 @@ export default function AdminPage() {
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-secondary-900 dark:text-white">
                         Registrations
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-secondary-900 dark:text-white">
+                        Attendance
                       </th>
                       <th className="px-6 py-4 text-right text-sm font-semibold text-secondary-900 dark:text-white">
                         Actions
@@ -1291,6 +1589,26 @@ export default function AdminPage() {
                         </td>
                         <td className="px-6 py-4 text-secondary-600 dark:text-secondary-400">
                           {event.registered || 0}/{event.capacity || "∞"}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => adjustEventRegistrations(event, -1)}
+                              className="p-1.5 rounded-lg bg-secondary-100 dark:bg-secondary-700 text-secondary-600 dark:text-secondary-300 hover:bg-secondary-200 dark:hover:bg-secondary-600 transition-colors"
+                              aria-label="Decrease registrations"
+                            >
+                              <Minus className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => adjustEventRegistrations(event, 1)}
+                              className="p-1.5 rounded-lg bg-secondary-100 dark:bg-secondary-700 text-secondary-600 dark:text-secondary-300 hover:bg-secondary-200 dark:hover:bg-secondary-600 transition-colors"
+                              aria-label="Increase registrations"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex justify-end flex-wrap gap-2">
@@ -1359,6 +1677,14 @@ export default function AdminPage() {
                   <Button variant="outline" onClick={() => setSelectedGalleryIds(filteredGallery.map((item) => item.id))}>
                     <CheckSquare className="w-5 h-5 mr-2" />
                     Select Visible
+                  </Button>
+                  <Button variant="outline" onClick={handleExportGalleryCsv}>
+                    <Download className="w-5 h-5 mr-2" />
+                    Export CSV
+                  </Button>
+                  <Button variant="outline" onClick={handleRemoveDuplicateGalleryItems}>
+                    <Database className="w-5 h-5 mr-2" />
+                    Remove Duplicates
                   </Button>
                   <Button variant="primary" onClick={handleAddGalleryItem}>
                     <Plus className="w-5 h-5 mr-2" />
@@ -1822,6 +2148,14 @@ export default function AdminPage() {
                         placeholder="Leave empty for unlimited"
                       />
                     </div>
+                    <Input
+                      label="Performers (comma-separated)"
+                      value={eventForm.performers}
+                      onChange={(e) =>
+                        setEventForm({ ...eventForm, performers: e.target.value })
+                      }
+                      placeholder="Artist A, Artist B"
+                    />
                     <Input
                       label="Location"
                       value={eventForm.location}
