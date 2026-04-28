@@ -1,9 +1,20 @@
 import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
 
-// Admin credentials (in production, store in database)
-const ADMIN_USERNAME = 'Ranjan';
-const ADMIN_PASSWORD_HASH = bcrypt.hashSync('Ranjan@123', 10);
+// Admin credentials — set ADMIN_USERNAME and ADMIN_PASSWORD_HASH env vars in production.
+// ADMIN_PASSWORD_HASH must be a bcrypt hash (e.g. generated with `bcryptjs.hashSync(password, 10)`).
+// Defaults are provided only for local development; in production these env vars must be set.
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Ranjan';
+
+// Accept a pre-hashed password from env to avoid recomputing the hash on startup.
+// Fall back to hashing ADMIN_PASSWORD if only the plaintext is provided.
+const _adminPasswordHash: string = (() => {
+  if (process.env.ADMIN_PASSWORD_HASH) {
+    return process.env.ADMIN_PASSWORD_HASH;
+  }
+  const plaintext = process.env.ADMIN_PASSWORD || 'Ranjan@123';
+  return bcrypt.hashSync(plaintext, 10);
+})();
 
 // JWT secret (in production, use environment variable)
 const JWT_SECRET = new TextEncoder().encode(
@@ -21,7 +32,7 @@ export async function verifyCredentials(username: string, password: string): Pro
     return false;
   }
   
-  return bcrypt.compareSync(password, ADMIN_PASSWORD_HASH);
+  return bcrypt.compareSync(password, _adminPasswordHash);
 }
 
 // Create JWT token
