@@ -228,10 +228,10 @@ export async function PUT(request: NextRequest) {
             
             eventTime = `${startHour.toString().padStart(2, "0")}:${startMin}`;
             eventEndTime = `${endHour.toString().padStart(2, "0")}:${endMin}`;
-          } else if (timeMatch.length >= 4 && timeMatch[3] && !timeMatch[4]) {
+          } else if (timeMatch.length >= 4 && timeMatch[3] && timeMatch[4]) {
             // Range without AM/PM
             eventTime = `${timeMatch[1].padStart(2, "0")}:${timeMatch[2]}`;
-            eventEndTime = `${timeMatch[3].padStart(2, "0")}:${timeMatch[4] || "00"}`;
+            eventEndTime = `${timeMatch[3].padStart(2, "0")}:${timeMatch[4]}`;
           } else {
             // Single time
             let hour = parseInt(timeMatch[1]);
